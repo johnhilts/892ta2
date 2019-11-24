@@ -3,6 +3,16 @@
 ## chunker.fs
 * break a list into chunks by a certain size
 
+## Example
+* Given a list such as: "one", "two", "three", "four", "five", "six".
+* Break the list down into smaller chunks where the total length of the items strings is less than a given limit, in this case 10.
+* The lists break down into: 
+```
+"one", "two" // 3 + 3 < 10
+"three", "four" // 5 + 4 < 10
+"five", "six" // 4 + 3 < 10
+```
+
 ### Inspiration
 I had a list of strings that was too long to use in a command, so I needed to break them up.
 I wanted to do something more elegant than summing a mutable variable in a for loop.
