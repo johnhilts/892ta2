@@ -1,0 +1,88 @@
+* Lisp vs C# and F#
+
+* Lisp - lots of power packed into simplicity
+
+This sample is based on a practice problem from _Lisp: A Gentle Introduction_.
+
+** Description
+/An arithmetic expression is either a number, or a three-element list whose first and third elements are arithmetic expressions and whose middle element is one of +, -, *, or /./
+
+In other words, basically any equation that is number operand number, and nesting is allowed.
+
+Examples:
+(1 + 2)
+(2 * (1 + 4))
+
+** Lisp Source
+There are a lot of ways to solve this, but the solution from the book was very elegant, so let's go with that:
+#+BEGIN_SRC lisp
+(defun arith-eval (exp)
+  (cond
+	((numberp exp) exp)
+	(t (funcall (second exp)
+		    (arith-eval (first exp))
+		    (arith-eval (third exp))))))
+#+END_SRC
+
+*** What's it doing?
+- =cond= is similar to =switch= in C#.
+- =numberp= means "is this a number?" The =p= stands for predicate.
+- =t= means "true", and here plays same role as =default= in a C# =switch= statement.
+- =first=, =second=, =third= means "get the first|second|third element of a collection".
+The function uses recursion to handle the nesting.
+- =funcall= means "invoke a function".
+In Lisp, the arithmatic operators =+= =-= =*= =/= are all actually functions. Therefore, a call like =(* 2 3)= will evaluate to 6.
+
+* C# - how to write the same function in C#
+#+BEGIN_SRC java
+using System;
+
+namespace cs
+{
+  public class program
+  {
+    public static void Main(string[] args)
+    {
+      Console.WriteLine(arith_eval (new [] {"1", "+", "2"}));
+      // (2 * (1 + 4))
+      // Console.WriteLine(arith_eval (new string [] {"2", "*", new [] {"1", "+", "4"}}));
+      // I have no idea how to even express a nested array ... I would have to write a new class ...
+    }
+
+    static dynamic arith_eval (dynamic exp)
+    {
+      var operand = exp as string;
+      if (operand != null && int.TryParse(operand, out var number))
+        return number;
+      else
+        switch (exp[1] as string)
+        {
+          case "+":
+            return arith_eval(exp[0]) + arith_eval(exp[2]);
+          case "-":
+            return arith_eval(exp[0]) - arith_eval(exp[2]);
+          case "*":
+            return arith_eval(exp[0]) * arith_eval(exp[2]);
+          case "/":
+	    return arith_eval(exp[0]) / arith_eval(exp[2]);
+	}
+
+	throw new Exception("The compiler forces me to write this");
+      }
+    }
+  }
+}
+#+END_SRC
+** Analysis
+*** What's it doing?
+- The C# version is taking a collection, and parsing and evaluating it recursively.
+- To get as close to the Lisp version as I could, I used the dynamic type. The dynamic type is allowing me to pass a string array or a string to the same function.
+- The exception at the end of the method is to prevent the build from failing, or otherwise it detects that not all paths return from the method.
+*** What's it NOT doing?
+- It cannot handle a "nested" array. I think the only way to do that would be to write a special class with that capability.
+- Since the arithmatic operators =+= =-= =*= =/= are just operators and not functions, there's no way to invoke them interchangeably like I would with function pointers. I could probably put them in a dictionary where the operators would be the key, and then each would point to a wrapper method such as =int Add(int number1, int number2) => number1 + number2= ...
+*** Conclusion
+- The C# version lacks some featurs of the Lisp version. That doesn't mean it's impossible, but it would require a lot more overhead.
+- There's no type safety at compile time in either of these versions.
+
+* F# - how to write the same function in F#
